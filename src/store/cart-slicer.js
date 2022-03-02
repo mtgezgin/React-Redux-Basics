@@ -1,13 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
+import { showNotification } from "./ui-slicer";
+import { database } from "../config/database";
 
 const cartSlice = createSlice({
   name: "cart",
   initialState: {
     items: [],
     totalQuantity: 0,
-    totalPrice: 0,
   },
   reducers: {
+    replaceCart: (state, action) => {
+      state.totalQuantity = action.payload.totalQuantity;
+      state.totalPrice = action.payload.totalPrice;
+      state.items = action.payload.items;
+    },
     addItem(state, action) {
       const item = action.payload;
       const existingItem = state.items.find((i) => i.id === item.id);
@@ -34,6 +41,45 @@ const cartSlice = createSlice({
   }, // reducers
 }); // createSlice
 
-export const { addItem, removeItem } = cartSlice.actions;
+export const sendCartData = (cart) => {
+  return async (dispatch) => {
+    dispatch(
+      showNotification({
+        status: "pending",
+        title: "Sending data...",
+        message: "Sending Cart Data!",
+      })
+    ); // showNotification
 
-export default cartSlice.reducer;
+    const sendRequest = async () => {
+      const response = await axios.put(`${database}/cart.json`, cart); // send cart data to firebase
+
+      if (response.status !== 200) {
+        throw new Error("Sending cart data failed!"); // throw error
+      }
+    };
+
+    try {
+      await sendRequest();
+      dispatch(
+        showNotification({
+          status: "success",
+          title: "Success!",
+          message: "Cart data sent successfully!",
+        }) // showNotification
+      );
+    } catch (error) {
+      dispatch(
+        showNotification({
+          status: "error",
+          title: "Error!",
+          message: "Sending cart data failed!",
+        }) // showNotification
+      );
+    }
+  };
+};
+
+export const { addItem, removeItem, replaceCart } = cartSlice.actions; // export actions
+
+export default cartSlice.reducer; // export reducer
