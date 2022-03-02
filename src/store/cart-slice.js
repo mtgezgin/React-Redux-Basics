@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { showNotification } from "./ui-slicer";
+import { showNotification } from "./ui-slice";
 import { database } from "../config/database";
 
 const cartSlice = createSlice({
